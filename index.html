@@ -1,0 +1,562 @@
+﻿<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ஐ என் பி வாக்காளர் விவரம்</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .data-table-container {
+            max-height: 70vh; 
+            overflow: auto; 
+            -webkit-overflow-scrolling: touch;
+        }
+        /* Style for Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+        .modal-content {
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        /* Disabled button style */
+        .btn-disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-4 sm:p-8">
+        <header class="mb-6 border-b pb-4">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-blue-800 text-center">ஐ என் பி வாக்காளர் விவரம்</h1>
+            <p class="text-center text-gray-500 mt-1">பதிவுகளைப் பார்க்கவும், தேடவும், மொபைல் எண்/முகவரியைப் புதுப்பிக்கவும்</p>
+        </header>
+
+        <!-- Search and Filter Section -->
+        <div class="mb-6 p-4 bg-blue-50 rounded-lg shadow-inner">
+            <label for="search-input" class="block text-lg font-semibold text-blue-700 mb-2">தேடல் (பெயர், திருமணமான தேதி, அல்லது வருடம்)</label>
+            <input type="text" id="search-input" placeholder="தேட வேண்டிய பெயரை, தேதி (YYYY-MM-DD), அல்லது வருடத்தை உள்ளிடவும்..."
+                   class="w-full p-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                   oninput="filterRecords()">
+        </div>
+
+        <!-- Loading and Status Messages -->
+        <div id="status-message" class="text-center p-3 mb-4 text-sm font-medium text-gray-600 bg-yellow-100 rounded-lg hidden">
+            தரவு ஏற்றப்படுகிறது...
+        </div>
+
+        <!-- Data Display Section -->
+        <div class="data-table-container" id="data-container">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-blue-50 sticky top-0 shadow-sm z-10">
+                    <tr>
+                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">வரிசை எண்</th>
+                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">பெயர்</th>
+                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">தந்தை பெயர்</th>
+                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">வகையரா</th>
+                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">திருமணமான தேதி</th>
+                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider hidden lg:table-cell">திருமணமான வருடம்</th>
+                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">திருமணத்தின் போது வயது</th>
+                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">தற்போதைய வயது</th>
+                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">மொபைல் நம்பர்</th>
+                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">முகவரி</th>
+                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">செயல்</th>
+                    </tr>
+                </thead>
+                <tbody id="voter-details-body" class="bg-white divide-y divide-gray-100">
+                    <!-- Data rows will be inserted here -->
+                </tbody>
+            </table>
+            
+            <div id="no-results" class="text-center py-12 text-gray-500 text-xl hidden">
+                தேடலுக்கு ஏற்ற பதிவுகள் எதுவும் இல்லை.
+            </div>
+
+            <div id="user-info" class="text-sm text-gray-400 mt-6 pt-4 border-t border-gray-200">
+                <p>பயனர் ID: <span id="current-user-id">இல்லை</span></p>
+                <p class="text-xs text-red-500 mt-1">தரவைப் பதிவேற்ற, உங்கள் கணினியில் உள்ள Node.js ஸ்கிரிப்டைப் பயன்படுத்தவும்.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Update Modal (Hidden by default) -->
+    <div id="update-modal" class="modal-overlay hidden">
+        <div class="modal-content bg-white rounded-xl shadow-3xl p-6 relative">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4 border-b pb-2">தொடர்பு விவரம் பதிய</h2>
+            
+            <form id="update-form">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">வாக்காளர் பெயர் (பார்வை மட்டும்):</label>
+                    <p id="update-name" class="text-lg font-semibold text-gray-900 bg-gray-50 p-2 rounded-lg"></p>
+                    <input type="hidden" id="update-serial-no">
+                </div>
+                
+                <div id="modal-status-message-top" class="text-center p-3 mb-4 text-sm font-medium rounded-lg hidden"></div>
+                
+                <!-- VAKAYARA FIELD -->
+                <div class="mb-4">
+                    <label for="update-relation" class="block text-sm font-medium text-gray-700 mb-1">வகையரா <span class="text-red-500">*</span></label>
+                    <input type="text" id="update-relation" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required>
+                </div>
+
+                <!-- MOBILE FIELD -->
+                <div class="mb-4">
+                    <label for="update-mobile" class="block text-sm font-medium text-gray-700 mb-1">மொபைல் நம்பர் <span class="text-red-500">*</span></label>
+                    <input type="tel" id="update-mobile" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required>
+                </div>
+
+                <!-- ADDRESS FIELD -->
+                <div class="mb-6">
+                    <label for="update-address" class="block text-sm font-medium text-gray-700 mb-1">முகவரி <span class="text-red-500">*</span></label>
+                    <textarea id="update-address" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 resize-none" required></textarea>
+                </div>
+                
+                <div id="modal-status-message-bottom" class="text-center p-3 mb-4 text-sm font-medium rounded-lg hidden"></div>
+
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="closeUpdateModal()" class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition duration-300">
+                        ரத்துசெய்யவும்
+                    </button>
+                    <button type="submit" id="save-button" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-300 shadow-md">
+                        சேமிக்கவும்
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, doc, setDoc, onSnapshot, runTransaction
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        setLogLevel('debug');
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db;
+        let auth;
+        let globalRecords = [];
+        let currentUserId = null;
+        const COLLECTION_NAME = 'voter_details';
+        const DATA_DOC_ID = 'all_voter_records';
+
+        // Sample data: Record 1 has empty contact fields. Record 2 has mobile and address filled.
+        const sampleRecords = [
+            { serialNo: 1, name: "மாதிரிப் பெயர் 1", fatherName: "மாதிரித் தந்தை", relation: "", marriageDate: "2000-01-01", marriageYear: 2000, ageAtMarriage: 25, currentAge: 45, mobileNo: "", address: "" },
+            { serialNo: 2, name: "மாதிரிப் பெயர் 2", fatherName: "மாதிரித் தந்தை", relation: "கணவர்", marriageDate: "2005-05-15", marriageYear: 2005, ageAtMarriage: 30, currentAge: 50, mobileNo: "9876543210", address: "மதுரை, தமிழ்நாடு" }, 
+            { serialNo: 3, name: "மாதிரிப் பெயர் 3", fatherName: "மாதிரித் தந்தை", relation: "தந்தை", marriageDate: "2010-01-01", marriageYear: 2010, ageAtMarriage: 22, currentAge: 37, mobileNo: "", address: "திருச்சி" }, // Only Mobile empty
+        ];
+        
+        // DOM elements
+        const statusMessageEl = document.getElementById('status-message');
+        const voterDetailsBody = document.getElementById('voter-details-body');
+        const noResultsEl = document.getElementById('no-results');
+        const currentUserIdEl = document.getElementById('current-user-id');
+        const updateModal = document.getElementById('update-modal');
+        const updateForm = document.getElementById('update-form');
+        const updateNameEl = document.getElementById('update-name');
+        const updateSerialNoEl = document.getElementById('update-serial-no');
+        const updateRelationEl = document.getElementById('update-relation');
+        const updateMobileEl = document.getElementById('update-mobile');
+        const updateAddressEl = document.getElementById('update-address');
+        const saveButtonEl = document.getElementById('save-button');
+        const modalStatusTopEl = document.getElementById('modal-status-message-top');
+        const modalStatusBottomEl = document.getElementById('modal-status-message-bottom');
+
+        // Helper function for styling read-only fields
+        function toggleReadOnlyStyles(element, isReadOnly) {
+            element.readOnly = isReadOnly;
+            element.classList.toggle('bg-gray-100', isReadOnly);
+            element.classList.toggle('bg-white', !isReadOnly);
+        }
+
+        // --- Utility Functions ---
+
+        function showStatus(message, isError = false, element = statusMessageEl) {
+            element.textContent = message;
+            element.className = isError 
+                ? 'text-center p-3 mb-4 text-sm font-medium text-red-700 bg-red-100 rounded-lg'
+                : 'text-center p-3 mb-4 text-sm font-medium text-gray-600 bg-yellow-100 rounded-lg';
+            element.classList.remove('hidden');
+        }
+
+        function hideStatus(element = statusMessageEl) {
+            element.classList.add('hidden');
+        }
+
+        function getCollectionRef() {
+            // Public data path: /artifacts/{appId}/public/data/voter_details/all_voter_records
+            return doc(db, 'artifacts', appId, 'public', 'data', COLLECTION_NAME, DATA_DOC_ID);
+        }
+        
+        // --- Firebase Core Initialization and Data Listener ---
+
+        async function initFirebase() {
+            if (!firebaseConfig) {
+                showStatus("Firebase கட்டமைப்பு விவரங்கள் கிடைக்கவில்லை.", true);
+                return;
+            }
+
+            try {
+                showStatus("அங்கீகாரம் மற்றும் தரவுத்தளம் ஏற்றப்படுகிறது...");
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // 1. Authenticate
+                await new Promise(resolve => {
+                    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            currentUserId = user.uid;
+                        } else {
+                            try {
+                                if (initialAuthToken) {
+                                    await signInWithCustomToken(auth, initialAuthToken);
+                                } else {
+                                    await signInAnonymously(auth);
+                                }
+                                currentUserId = auth.currentUser.uid;
+                            } catch (error) {
+                                console.error("Authentication Error:", error);
+                                showStatus("அங்கீகார பிழை: தரவை அணுக முடியவில்லை.", true);
+                                currentUserId = 'anonymous-error';
+                            }
+                        }
+                        currentUserIdEl.textContent = currentUserId;
+                        unsubscribe(); 
+                        resolve();
+                    });
+                });
+                
+                // 2. Setup Data Listener
+                setupDataListener();
+
+            } catch (error) {
+                console.error("Firebase Initialization Error:", error);
+                showStatus(`Firebase துவக்கப் பிழை: ${error.message}`, true);
+            }
+        }
+
+        async function ensureSampleDataExists() {
+            const dataDocRef = getCollectionRef();
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const docSnapshot = await transaction.get(dataDocRef);
+
+                    if (!docSnapshot.exists() || !docSnapshot.data().records || docSnapshot.data().records.length === 0) {
+                        console.log("No existing data found. Uploading sample data...");
+                        transaction.set(dataDocRef, { records: sampleRecords, lastUpdated: new Date().toISOString() });
+                    }
+                });
+            } catch (error) {
+                console.error("Error ensuring sample data exists:", error);
+            }
+        }
+
+        function setupDataListener() {
+            if (!db || !currentUserId) {
+                console.log("Database or User ID not ready for listener.");
+                return;
+            }
+
+            const dataDocRef = getCollectionRef();
+            ensureSampleDataExists();
+
+            onSnapshot(dataDocRef, (docSnapshot) => {
+                if (docSnapshot.exists() && docSnapshot.data().records) {
+                    globalRecords = docSnapshot.data().records.map(r => ({
+                        ...r,
+                        serialNo: Number(r.serialNo) || 0,
+                        name: String(r.name || ''),
+                        marriageDate: String(r.marriageDate || ''),
+                        marriageYear: String(r.marriageYear || ''),
+                        mobileNo: String(r.mobileNo || ''), 
+                        address: String(r.address || ''),
+                        relation: String(r.relation || '')
+                    }));
+                    filterRecords();
+                    hideStatus();
+                } else {
+                    globalRecords = [];
+                    filterRecords();
+                    showStatus("வாக்காளர் பதிவுகள் எதுவும் கிடைக்கவில்லை. தரவைப் பதிவேற்றவும்.", true);
+                }
+            }, (error) => {
+                console.error("Error listening to Firestore:", error);
+                showStatus(`தரவு ஏற்றத்தில் பிழை: ${error.message}`, true);
+            });
+        }
+        
+        // --- Modal and Update Logic ---
+
+        /**
+         * Sets the state of the modal elements. Locks individual fields if data exists.
+         * Disables the Save button only if ALL fields are locked.
+         * @param {Object} record - The current voter record.
+         */
+        function setUpdateModalState(record) {
+            const mobileExists = record.mobileNo.trim() !== '';
+            const addressExists = record.address.trim() !== '';
+            const relationExists = record.relation.trim() !== ''; 
+            
+            // 1. Lock individual fields if data exists and apply styles
+            toggleReadOnlyStyles(updateRelationEl, relationExists);
+            toggleReadOnlyStyles(updateMobileEl, mobileExists);
+            toggleReadOnlyStyles(updateAddressEl, addressExists);
+
+            // 2. Check if ALL fields are complete (locked)
+            const dataComplete = mobileExists && addressExists && relationExists; 
+
+            if (dataComplete) {
+                // All fields are filled and locked -> Disable save button
+                saveButtonEl.disabled = true;
+                saveButtonEl.classList.add('btn-disabled');
+                showStatus("அனைத்துத் தொடர்பு விவரங்களும் ஏற்கனவே பதியப்பட்டுவிட்டன. புதுப்பிக்க முடியாது.", true, modalStatusTopEl);
+            } else {
+                // At least one field is empty/editable -> Enable save button
+                saveButtonEl.disabled = false;
+                saveButtonEl.classList.remove('btn-disabled');
+                hideStatus(modalStatusTopEl);
+            }
+        }
+        
+        window.openUpdateModal = function(serialNo) {
+            const record = globalRecords.find(r => r.serialNo === serialNo);
+            
+            if (!record) {
+                showStatus(`பதிவு எண் ${serialNo} காணப்படவில்லை.`, true);
+                return;
+            }
+
+            // Populate modal fields
+            updateNameEl.textContent = record.name;
+            updateSerialNoEl.value = serialNo;
+            updateRelationEl.value = record.relation; 
+            updateMobileEl.value = record.mobileNo;
+            updateAddressEl.value = record.address;
+            
+            // Set the disabled/enabled state based on existing data
+            setUpdateModalState(record);
+            
+            // Ensure bottom status is hidden
+            hideStatus(modalStatusBottomEl);
+            updateModal.classList.remove('hidden');
+        }
+
+        window.closeUpdateModal = function() {
+            updateModal.classList.add('hidden');
+            updateForm.reset();
+        }
+
+        updateForm.onsubmit = function(event) {
+            event.preventDefault();
+            // Only attempt to save if the button is NOT disabled
+            if (!saveButtonEl.disabled) {
+                saveUpdatedRecord();
+            } else {
+                 showStatus("இந்த விவரங்களை உங்களால் புதுப்பிக்க முடியாது. அனைத்தும் பூட்டப்பட்டுள்ளன.", true, modalStatusTopEl);
+            }
+        }
+
+        async function saveUpdatedRecord() {
+            hideStatus(modalStatusBottomEl);
+            
+            const serialNo = Number(updateSerialNoEl.value);
+            
+            // Validation: Check only fields that are NOT readOnly (meaning they were empty and now must be filled)
+            if (!updateRelationEl.readOnly && !updateRelationEl.value.trim()) {
+                showStatus("வகையரா கட்டாயம் நிரப்பப்பட வேண்டும்.", true, modalStatusBottomEl);
+                return;
+            }
+            if (!updateMobileEl.readOnly && !updateMobileEl.value.trim()) {
+                showStatus("மொபைல் நம்பர் கட்டாயம் நிரப்பப்பட வேண்டும்.", true, modalStatusBottomEl);
+                return;
+            }
+            if (!updateAddressEl.readOnly && !updateAddressEl.value.trim()) {
+                showStatus("முகவரி கட்டாயம் நிரப்பப்பட வேண்டும்.", true, modalStatusBottomEl);
+                return;
+            }
+
+            // Get current record to check for changes/prevent unnecessary saves
+            const currentRecord = globalRecords.find(r => r.serialNo === serialNo);
+            
+            if (currentRecord) {
+                // IMPORTANT: Use the value from the form, which will contain the old (read-only) value if not changed, 
+                // or the new value if it was just entered.
+                const updatedRelation = updateRelationEl.value.trim();
+                const updatedMobile = updateMobileEl.value.trim();
+                const updatedAddress = updateAddressEl.value.trim();
+                
+                const relationChanged = currentRecord.relation !== updatedRelation;
+                const mobileChanged = currentRecord.mobileNo !== updatedMobile;
+                const addressChanged = currentRecord.address !== updatedAddress;
+
+                if (!relationChanged && !mobileChanged && !addressChanged) {
+                    showStatus("எந்த மாற்றங்களும் செய்யப்படவில்லை.", false, modalStatusBottomEl);
+                    setTimeout(closeUpdateModal, 1000);
+                    return;
+                }
+            } else {
+                showStatus("தரவுத்தளத்தில் அசல் பதிவு காணப்படவில்லை.", true, modalStatusBottomEl);
+                return;
+            }
+            
+            showStatus("தரவு சேமிக்கப்படுகிறது...", false, modalStatusBottomEl);
+            
+            const dataDocRef = getCollectionRef();
+
+            try {
+                // Use runTransaction to safely read, modify the array, and write back
+                await runTransaction(db, async (transaction) => {
+                    const docSnapshot = await transaction.get(dataDocRef);
+
+                    if (!docSnapshot.exists() || !docSnapshot.data().records) {
+                        throw new Error("அசல் பதிவுகள் கிடைக்கவில்லை.");
+                    }
+
+                    const records = docSnapshot.data().records;
+                    const recordIndex = records.findIndex(r => Number(r.serialNo) === serialNo);
+
+                    if (recordIndex === -1) {
+                        throw new Error(`பதிவு எண் ${serialNo} அட்டவணையில் காணப்படவில்லை.`);
+                    }
+
+                    // Create a copy of the array and update the record
+                    const updatedRecords = [...records];
+                    updatedRecords[recordIndex] = {
+                        ...updatedRecords[recordIndex],
+                        // Use the values from the form inputs
+                        relation: updateRelationEl.value.trim(), 
+                        mobileNo: updateMobileEl.value.trim(),
+                        address: updateAddressEl.value.trim(),
+                        lastUpdatedOn: new Date().toISOString()
+                    };
+
+                    // Set the entire modified array back
+                    transaction.set(dataDocRef, { 
+                        records: updatedRecords, 
+                        lastUpdated: new Date().toISOString()
+                    });
+                });
+
+                showStatus("தொடர்பு விவரங்கள் வெற்றிகரமாகப் புதுப்பிக்கப்பட்டன!", false, modalStatusBottomEl);
+                
+                // Close modal and the Firestore listener will automatically update the table
+                setTimeout(() => {
+                    closeUpdateModal();
+                }, 1500);
+
+            } catch (error) {
+                console.error("Firestore Update Error:", error);
+                showStatus(`சேமிப்பில் பிழை ஏற்பட்டது: ${error.message}`, true, modalStatusBottomEl);
+            }
+        }
+
+        // --- Filtering and Rendering Logic (Unchanged) ---
+
+        window.filterRecords = function() {
+            const searchInput = document.getElementById('search-input').value.trim().toLowerCase();
+            
+            let filteredRecords = globalRecords;
+
+            if (searchInput) {
+                filteredRecords = globalRecords.filter(record => {
+                    const nameMatch = record.name.toLowerCase().includes(searchInput);
+                    const dateMatch = record.marriageDate.toLowerCase().includes(searchInput);
+                    const yearMatch = record.marriageYear.toString().includes(searchInput);
+
+                    return nameMatch || dateMatch || yearMatch;
+                });
+            }
+            
+            renderTable(filteredRecords);
+        }
+
+        function renderTable(records) {
+            voterDetailsBody.innerHTML = '';
+            
+            if (records.length === 0) {
+                noResultsEl.classList.remove('hidden');
+                return;
+            }
+
+            noResultsEl.classList.add('hidden');
+
+            records.forEach(record => {
+                const row = voterDetailsBody.insertRow();
+                row.className = 'hover:bg-blue-50 transition duration-150 ease-in-out';
+                
+                // Data for each cell (order matches table headers)
+                const dataFields = [
+                    record.serialNo,
+                    record.name,
+                    record.fatherName,
+                    record.relation,
+                    record.marriageDate,
+                    record.marriageYear,
+                    record.ageAtMarriage,
+                    record.currentAge,
+                    record.mobileNo,
+                    record.address
+                ];
+
+                dataFields.forEach((field, index) => {
+                    const cell = row.insertCell();
+                    cell.textContent = field || '';
+                    cell.className = 'px-3 py-2 whitespace-nowrap text-sm text-gray-700';
+                    
+                    // Apply hidden classes for responsiveness
+                    if (index === 5) cell.classList.add('hidden', 'lg:table-cell'); // Marriage Year
+                });
+                
+                // Action Button Cell
+                const actionCell = row.insertCell();
+                actionCell.className = 'px-3 py-2 whitespace-nowrap text-sm font-medium';
+                actionCell.innerHTML = `
+                    <button onclick="openUpdateModal(${record.serialNo})" 
+                            class="bg-green-500 text-white p-2 text-xs rounded-lg shadow-sm hover:bg-green-600 transition duration-150 transform hover:scale-105">
+                        விவரங்கள் சேர்க்க
+                    </button>
+                `;
+            });
+        }
+
+        window.onload = initFirebase;
+    </script>
+</body>
+</html>
