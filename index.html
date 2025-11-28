@@ -106,7 +106,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">வாக்காளர் பெயர் (பார்வை மட்டும்):</label>
                     <p id="update-name" class="text-lg font-semibold text-gray-900 bg-gray-50 p-2 rounded-lg"></p>
                     <input type="hidden" id="update-serial-no">
-                </div>
+                    <input type="hidden" id="update-doc-id"> </div>
                 
                 <div id="modal-status-message-top" class="text-center p-3 mb-4 text-sm font-medium rounded-lg hidden"></div>
                 
@@ -143,21 +143,20 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
-            getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged 
+            getAuth, signInAnonymously, onAuthStateChanged 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
-            getFirestore, doc, setDoc, onSnapshot, runTransaction
+            getFirestore, collection, doc, onSnapshot, updateDoc, getDocs
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         setLogLevel('debug');
 
         // ------------------------------------------------------------------------------------------
-        // 🔥 FIX 1: Hardcoded Firebase Configuration & AuthDomain Correction
-        // The http:// was removed from authDomain.
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyD5zu1YkYTy5AAGzs8tOVU4Mz5ZLxf87GE", 
-            authDomain: "inptvotersdata.firebaseapp.com", // Corrected
+            authDomain: "inptvotersdata.firebaseapp.com",
             projectId: "inptvotersdata", 
             storageBucket: "inptvotersdata.appspot.com",
             messagingSenderId: "772536734950",
@@ -165,26 +164,14 @@
         };
         // ------------------------------------------------------------------------------------------
 
-        // Use projectId as the appId for the data path construction (common pattern)
-        const appId = firebaseConfig.projectId; 
-        const initialAuthToken = null; // Token not needed for anonymous sign-in
-
         let db;
         let auth;
         let globalRecords = [];
         let currentUserId = null;
         
-        // 🔥 FIX 2: Corrected Collection Name to match the uploader script
+        // FIX: Collection Name now points to the root collection where data is actually stored
         const COLLECTION_NAME = 'voterRecords'; 
-        const DATA_DOC_ID = 'all_voter_records'; 
 
-        // Sample data: Record 1 has empty contact fields. Record 2 has mobile and address filled.
-        const sampleRecords = [
-            { serialNo: 1, name: "மாதிரிப் பெயர் 1", fatherName: "மாதிரித் தந்தை", relation: "", marriageDate: "2000-01-01", marriageYear: 2000, ageAtMarriage: 25, currentAge: 45, mobileNo: "", address: "" },
-            { serialNo: 2, name: "மாதிரிப் பெயர் 2", fatherName: "மாதிரித் தந்தை", relation: "கணவர்", marriageDate: "2005-05-15", marriageYear: 2005, ageAtMarriage: 30, currentAge: 50, mobileNo: "9876543210", address: "மதுரை, தமிழ்நாடு" }, 
-            { serialNo: 3, name: "மாதிரிப் பெயர் 3", fatherName: "மாதிரித் தந்தை", relation: "தந்தை", marriageDate: "2010-01-01", marriageYear: 2010, ageAtMarriage: 22, currentAge: 37, mobileNo: "", address: "திருச்சி" }, // Only Mobile empty
-        ];
-        
         // DOM elements
         const statusMessageEl = document.getElementById('status-message');
         const voterDetailsBody = document.getElementById('voter-details-body');
@@ -194,6 +181,7 @@
         const updateForm = document.getElementById('update-form');
         const updateNameEl = document.getElementById('update-name');
         const updateSerialNoEl = document.getElementById('update-serial-no');
+        const updateDocIdEl = document.getElementById('update-doc-id'); // NEW
         const updateRelationEl = document.getElementById('update-relation');
         const updateMobileEl = document.getElementById('update-mobile');
         const updateAddressEl = document.getElementById('update-address');
@@ -222,10 +210,9 @@
             element.classList.add('hidden');
         }
 
+        // FIX: Function now returns a Collection Reference to 'voterRecords'
         function getCollectionRef() {
-            // Public data path: /artifacts/{appId}/public/data/voterRecords/all_voter_records
-            // NOTE: This complex path relies on the appId being the projectId, which works for this setup.
-            return doc(db, 'artifacts', appId, 'public', 'data', COLLECTION_NAME, DATA_DOC_ID);
+            return collection(db, COLLECTION_NAME);
         }
         
         // --- Firebase Core Initialization and Data Listener ---
@@ -243,19 +230,14 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // 1. Authenticate
+                // 1. Authenticate (Anonymous Sign-in)
                 await new Promise(resolve => {
                     const unsubscribe = onAuthStateChanged(auth, async (user) => {
                         if (user) {
                             currentUserId = user.uid;
                         } else {
                             try {
-                                if (initialAuthToken) {
-                                    await signInWithCustomToken(auth, initialAuthToken);
-                                } else {
-                                    // Anonymous Sign-In: The method used to get a basic authenticated user.
-                                    await signInAnonymously(auth); 
-                                }
+                                await signInAnonymously(auth); 
                                 currentUserId = auth.currentUser.uid;
                             } catch (error) {
                                 console.error("Authentication Error:", error);
@@ -278,51 +260,46 @@
             }
         }
 
-        async function ensureSampleDataExists() {
-            const dataDocRef = getCollectionRef();
-            try {
-                // This function is intended to upload sample data if the document is empty.
-                // Since you have successfully uploaded 1521 records, this should not trigger.
-                await runTransaction(db, async (transaction) => {
-                    const docSnapshot = await transaction.get(dataDocRef);
-
-                    if (!docSnapshot.exists() || !docSnapshot.data().records || docSnapshot.data().records.length === 0) {
-                        console.log("No existing data found. Uploading sample data...");
-                        transaction.set(dataDocRef, { records: sampleRecords, lastUpdated: new Date().toISOString() });
-                    }
-                });
-            } catch (error) {
-                console.error("Error ensuring sample data exists:", error);
-                // Note: If you receive permission errors here, your Firestore Security Rules may be too strict.
-            }
-        }
-
+        // FIX: The data listener now uses onSnapshot with a Collection Reference
         function setupDataListener() {
             if (!db || !currentUserId) {
                 console.log("Database or User ID not ready for listener.");
                 return;
             }
 
-            const dataDocRef = getCollectionRef();
-            ensureSampleDataExists();
+            const collectionRef = getCollectionRef();
+            
+            // Listen to the entire collection
+            onSnapshot(collectionRef, (querySnapshot) => {
+                const records = [];
+                // Iterate through each document in the collection
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    records.push({
+                        // Store the Firestore Document ID, which is needed for updates
+                        docId: doc.id, 
+                        // Map fields to expected front-end structure
+                        serialNo: Number(data.serialNo) || 0,
+                        name: String(data.name || ''),
+                        fatherName: String(data.fatherName || ''),
+                        relation: String(data.relation || ''),
+                        marriageDate: String(data.marriageDate || ''),
+                        marriageYear: String(data.marriageYear || ''),
+                        ageAtMarriage: Number(data.ageAtMarriage) || 0,
+                        currentAge: Number(data.currentAge) || 0,
+                        mobileNo: String(data.mobileNo || ''), 
+                        address: String(data.address || '')
+                    });
+                });
 
-            onSnapshot(dataDocRef, (docSnapshot) => {
-                if (docSnapshot.exists() && docSnapshot.data().records) {
-                    globalRecords = docSnapshot.data().records.map(r => ({
-                        ...r,
-                        serialNo: Number(r.serialNo) || 0,
-                        name: String(r.name || ''),
-                        marriageDate: String(r.marriageDate || ''),
-                        marriageYear: String(r.marriageYear || ''),
-                        mobileNo: String(r.mobileNo || ''), 
-                        address: String(r.address || ''),
-                        relation: String(r.relation || '')
-                    }));
+                globalRecords = records.sort((a, b) => a.serialNo - b.serialNo);
+                
+                if (globalRecords.length > 0) {
                     filterRecords();
                     hideStatus();
                 } else {
-                    globalRecords = [];
                     filterRecords();
+                    // Show the specific error for no records found
                     showStatus("வாக்காளர் பதிவுகள் எதுவும் கிடைக்கவில்லை. தரவைப் பதிவேற்றவும்.", true);
                 }
             }, (error) => {
@@ -332,10 +309,9 @@
         }
         
         // --- Modal and Update Logic ---
-
+        
         /**
          * Sets the state of the modal elements. Locks individual fields if data exists.
-         * Disables the Save button only if ALL fields are locked.
          * @param {Object} record - The current voter record.
          */
         function setUpdateModalState(record) {
@@ -365,6 +341,7 @@
         }
         
         window.openUpdateModal = function(serialNo) {
+            // FIX: Find the record by serialNo (which is what the button passes)
             const record = globalRecords.find(r => r.serialNo === serialNo);
             
             if (!record) {
@@ -375,6 +352,7 @@
             // Populate modal fields
             updateNameEl.textContent = record.name;
             updateSerialNoEl.value = serialNo;
+            updateDocIdEl.value = record.docId; // NEW: Store the Doc ID
             updateRelationEl.value = record.relation; 
             updateMobileEl.value = record.mobileNo;
             updateAddressEl.value = record.address;
@@ -402,12 +380,13 @@
             }
         }
 
+        // FIX: Updated logic to update a single document by its ID
         async function saveUpdatedRecord() {
             hideStatus(modalStatusBottomEl);
             
-            const serialNo = Number(updateSerialNoEl.value);
+            const docId = updateDocIdEl.value; // Get the Firestore Document ID
             
-            // Validation: Check only fields that are NOT readOnly (meaning they were empty and now must be filled)
+            // Validation (Unchanged)
             if (!updateRelationEl.readOnly && !updateRelationEl.value.trim()) {
                 showStatus("வகையரா கட்டாயம் நிரப்பப்பட வேண்டும்.", true, modalStatusBottomEl);
                 return;
@@ -421,71 +400,39 @@
                 return;
             }
 
-            // Get current record to check for changes/prevent unnecessary saves
-            const currentRecord = globalRecords.find(r => r.serialNo === serialNo);
-            
-            if (currentRecord) {
-                // IMPORTANT: Use the value from the form, which will contain the old (read-only) value if not changed, 
-                // or the new value if it was just entered.
-                const updatedRelation = updateRelationEl.value.trim();
-                const updatedMobile = updateMobileEl.value.trim();
-                const updatedAddress = updateAddressEl.value.trim();
-                
-                const relationChanged = currentRecord.relation !== updatedRelation;
-                const mobileChanged = currentRecord.mobileNo !== updatedMobile;
-                const addressChanged = currentRecord.address !== updatedAddress;
+            // Get current record from local state (by docId) to check for changes
+            const currentRecord = globalRecords.find(r => r.docId === docId);
 
-                if (!relationChanged && !mobileChanged && !addressChanged) {
-                    showStatus("எந்த மாற்றங்களும் செய்யப்படவில்லை.", false, modalStatusBottomEl);
-                    setTimeout(closeUpdateModal, 1000);
-                    return;
-                }
-            } else {
-                showStatus("தரவுத்தளத்தில் அசல் பதிவு காணப்படவில்லை.", true, modalStatusBottomEl);
+            const updatedData = {
+                relation: updateRelationEl.value.trim(), 
+                mobileNo: updateMobileEl.value.trim(),
+                address: updateAddressEl.value.trim(),
+                lastUpdatedOn: new Date().toISOString()
+            };
+            
+            // Simplified change check based on the fields we are updating
+            const changesDetected = 
+                currentRecord.relation !== updatedData.relation ||
+                currentRecord.mobileNo !== updatedData.mobileNo ||
+                currentRecord.address !== updatedData.address;
+
+            if (!changesDetected) {
+                showStatus("எந்த மாற்றங்களும் செய்யப்படவில்லை.", false, modalStatusBottomEl);
+                setTimeout(closeUpdateModal, 1000);
                 return;
             }
             
             showStatus("தரவு சேமிக்கப்படுகிறது...", false, modalStatusBottomEl);
             
-            const dataDocRef = getCollectionRef();
+            const docRef = doc(db, COLLECTION_NAME, docId);
 
             try {
-                // Use runTransaction to safely read, modify the array, and write back
-                await runTransaction(db, async (transaction) => {
-                    const docSnapshot = await transaction.get(dataDocRef);
-
-                    if (!docSnapshot.exists() || !docSnapshot.data().records) {
-                        throw new Error("அசல் பதிவுகள் கிடைக்கவில்லை.");
-                    }
-
-                    const records = docSnapshot.data().records;
-                    const recordIndex = records.findIndex(r => Number(r.serialNo) === serialNo);
-
-                    if (recordIndex === -1) {
-                        throw new Error(`பதிவு எண் ${serialNo} அட்டவணையில் காணப்படவில்லை.`);
-                    }
-
-                    // Create a copy of the array and update the record
-                    const updatedRecords = [...records];
-                    updatedRecords[recordIndex] = {
-                        ...updatedRecords[recordIndex],
-                        // Use the values from the form inputs
-                        relation: updateRelationEl.value.trim(), 
-                        mobileNo: updateMobileEl.value.trim(),
-                        address: updateAddressEl.value.trim(),
-                        lastUpdatedOn: new Date().toISOString()
-                    };
-
-                    // Set the entire modified array back
-                    transaction.set(dataDocRef, { 
-                        records: updatedRecords, 
-                        lastUpdated: new Date().toISOString()
-                    });
-                });
+                // Use updateDoc to modify the fields on the specific document
+                await updateDoc(docRef, updatedData);
 
                 showStatus("தொடர்பு விவரங்கள் வெற்றிகரமாகப் புதுப்பிக்கப்பட்டன!", false, modalStatusBottomEl);
                 
-                // Close modal and the Firestore listener will automatically update the table
+                // Close modal (Firestore listener will automatically update the table)
                 setTimeout(() => {
                     closeUpdateModal();
                 }, 1500);
@@ -505,9 +452,10 @@
 
             if (searchInput) {
                 filteredRecords = globalRecords.filter(record => {
-                    const nameMatch = record.name.toLowerCase().includes(searchInput);
-                    const dateMatch = record.marriageDate.toLowerCase().includes(searchInput);
-                    const yearMatch = record.marriageYear.toString().includes(searchInput);
+                    // Check if the record fields are available before calling includes()
+                    const nameMatch = record.name && record.name.toLowerCase().includes(searchInput);
+                    const dateMatch = record.marriageDate && record.marriageDate.toLowerCase().includes(searchInput);
+                    const yearMatch = record.marriageYear && record.marriageYear.toString().includes(searchInput);
 
                     return nameMatch || dateMatch || yearMatch;
                 });
@@ -569,3 +517,4 @@
     </script>
 </body>
 </html>
+
