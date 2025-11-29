@@ -497,7 +497,7 @@
                 dataFields.forEach((field, index) => {
                     const cell = row.insertCell();
                     cell.textContent = field || '';
-                    cell.className = 'px-3 py-2 whitespace-nowrap text-sm text-gray-700';
+                    cell.className = 'px-3 py-1 whitespace-nowrap text-sm text-gray-700';
                     
                     // Apply hidden classes for responsiveness
                     if (index === 5) cell.classList.add('hidden', 'lg:table-cell'); // Marriage Year
@@ -505,7 +505,7 @@
                 
                 // Action Button Cell
                 const actionCell = row.insertCell();
-                actionCell.className = 'px-3 py-2 whitespace-nowrap text-sm font-medium';
+                actionCell.className = 'px-3 py-1 whitespace-nowrap text-sm font-medium';
                 actionCell.innerHTML = `
                     <button onclick="openUpdateModal(${record.serialNo})" 
                             class="bg-green-500 text-white p-2 text-xs rounded-lg shadow-sm hover:bg-green-600 transition duration-150 transform hover:scale-105">
@@ -519,6 +519,7 @@
     </script>
 </body>
 </html>
+
 
 
 
