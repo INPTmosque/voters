@@ -52,7 +52,7 @@
         <header class="mb-6 border-b pb-4">
             <h1 class="text-3xl sm:text-4xl font-extrabold text-blue-800 text-center">INPT வாக்காளர் பட்டியல்</h1>
             <p class="text-center text-grey-300 mt-1">விவரங்களைப் பார்க்க, தேட வகையரா/மொபைல் எண்/முகவரியை உள்ளீடு செய்ய</p>
-            //<p class="text-right text-yellow-700 mt-1" style="font-size: 10px;">-- உருவாக்கம் : சிக்கந்தர் பாட்சா</p>
+            /<p class="text-right text-yellow-700 mt-1" style="font-size: 10px;">-- உருவாக்கம் : சிக்கந்தர் பாட்சா</p>/
 
         </header>
 
@@ -497,7 +497,7 @@
                 dataFields.forEach((field, index) => {
                     const cell = row.insertCell();
                     cell.textContent = field || '';
-                    cell.className = 'px-3 py-1 whitespace-nowrap text-sm text-gray-700';
+                    cell.className = 'px-3 py-.5 whitespace-nowrap text-sm text-gray-700';
                     
                     // Apply hidden classes for responsiveness
                     if (index === 5) cell.classList.add('hidden', 'lg:table-cell'); // Marriage Year
@@ -505,7 +505,7 @@
                 
                 // Action Button Cell
                 const actionCell = row.insertCell();
-                actionCell.className = 'px-3 py-1 whitespace-nowrap text-sm font-medium';
+                actionCell.className = 'px-3 py-.5 whitespace-nowrap text-sm font-medium';
                 actionCell.innerHTML = `
                     <button onclick="openUpdateModal(${record.serialNo})" 
                             class="bg-green-500 text-white p-2 text-xs rounded-lg shadow-sm hover:bg-green-600 transition duration-150 transform hover:scale-105">
@@ -519,6 +519,7 @@
     </script>
 </body>
 </html>
+
 
 
 
