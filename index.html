@@ -349,12 +349,6 @@
                 return;
             }
 
-            // 1. Mask the mobile number for the read-only display
-    //let displayMobileNo = record.mobileNo || '';
-    //if (displayMobileNo.length >= 4) {
-     //   displayMobileNo = '******' + displayMobileNo.slice(-4);
-   // }
-
             // Populate modal fields
             updateNameEl.textContent = record.name;
            // updateModalMobileEl.textContent = displayMobileNo; // <-- NEW: Display masked number
@@ -366,6 +360,20 @@
             
             // Set the disabled/enabled state based on existing data
             setUpdateModalState(record);
+
+             // ----------------------------------------------------------------------
+            // Masking Logic for Mobile No. (Only applied if the field is readOnly)
+            let mobileNoValue = record.mobileNo || '';
+            const mobileIsReadOnly = updateMobileEl.readOnly; // Check if setUpdateModalState locked it
+
+            if (mobileIsReadOnly && mobileNoValue.length >= 4) {
+                // If the field is locked (data exists), display the masked version
+                updateMobileEl.value = '******' + mobileNoValue.slice(-4);
+            } else {
+                // If the field is editable (data does not exist), display the full, unmasked value
+                updateMobileEl.value = mobileNoValue;
+            }
+            // ----------------------------------------------------------------------
             
             // Ensure bottom status is hidden
             hideStatus(modalStatusBottomEl);
@@ -540,6 +548,7 @@
     </script>
 </body>
 </html>
+
 
 
 
