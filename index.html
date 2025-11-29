@@ -349,8 +349,15 @@
                 return;
             }
 
+            // 1. Mask the mobile number for the read-only display
+    let displayMobileNo = record.mobileNo || '';
+    if (displayMobileNo.length >= 4) {
+        displayMobileNo = '******' + displayMobileNo.slice(-4);
+    }
+
             // Populate modal fields
             updateNameEl.textContent = record.name;
+            updateModalMobileEl.textContent = displayMobileNo; // <-- NEW: Display masked number
             updateSerialNoEl.value = serialNo;
             updateDocIdEl.value = record.docId; // NEW: Store the Doc ID
             updateRelationEl.value = record.relation; 
@@ -533,6 +540,7 @@
     </script>
 </body>
 </html>
+
 
 
 
