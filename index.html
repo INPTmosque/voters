@@ -438,14 +438,12 @@
             let displayMobileNo = record.mobileNo || '';
             let mobileClassName = 'text-gray-900'; 
             
-            if (displayMobileNo.length > 0) {
-                mobileClassName = displayMobileNo.length > 0 ? 'text-green-700 font-semibold' : 'text-red-500';
-                if (displayMobileNo.length >= 4) {
-                    // Mask all but the last four digits
-                    displayMobileNo = '******' + displayMobileNo.slice(-4);
+            if (rawMobileNo.length >= 4) {
+                    // ✅ CORRECTED LINE: Mask all but the last four digits
+                    displayMobileNo = '******' + rawMobileNo.slice(-4);
                 } else {
                     // If less than 4 digits, show the available digits
-                    displayMobileNo = displayMobileNo; 
+                    displayMobileNo = rawMobileNo; 
                 }
             } else {
                 displayMobileNo = 'பதியவில்லை';
@@ -698,4 +696,5 @@
 
 </body>
 </html>
+
 
