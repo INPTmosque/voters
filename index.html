@@ -109,9 +109,6 @@
         <div class="modal-content bg-white rounded-xl shadow-3xl p-6 relative">
             <h2 class="text-2xl font-bold text-indigo-700 mb-3 border-b pb-2">தொடர்பு விவரம் பதிய</h2>
             
-            <div id="view-details-container" class="space-y-3 p-4 bg-gray-50 rounded-lg hidden">
-                    </div>
-                <form id="update-form">
             <form id="update-form">
                 <div class="mb-4">
                     <p id="update-name" class="text-lg font-semibold text-gray-900 bg-gray-50 p-2 rounded-lg"></p>
@@ -151,66 +148,6 @@
 
 
         <script type="module">
-
-            ### A. New Functions: `openViewModal` and `setViewModelState`
-
-### Add these two functions anywhere in your `<script type="module">` block:
-
-```javascript
-        // --- NEW: View-Only Modal Functions ---
-
-        const viewDetailsContainer = document.getElementById('view-details-container');
-        const updateModalTitle = document.querySelector('#update-modal h2');
-
-        /**
-         * Renders the record data vertically inside the modal.
-         */
-        function setViewModelState(record) {
-            
-            const fieldMap = [
-                { label: 'வரிசை எண்', value: record.serialNo },
-                { label: 'பெயர்', value: record.name, className: 'text-lg font-bold text-indigo-800' },
-                { label: 'தந்தை பெயர்', value: record.fatherName },
-                { label: 'வகையரா', value: record.relation || 'பதியவில்லை' },
-                { label: 'திருமணமான தேதி', value: record.marriageDate },
-                { label: 'திருமணமான வருடம்', value: record.marriageYear },
-                { label: 'திருமணத்தின் போது வயது', value: record.ageAtMarriage },
-                { label: 'தற்போதைய வயது', value: record.currentAge },
-                { label: 'மொபைல் நம்பர்', value: record.mobileNo || 'பதியவில்லை', className: record.mobileNo ? 'text-green-700 font-semibold' : 'text-red-500' },
-                { label: 'முகவரி', value: record.address || 'பதியவில்லை' }
-            ];
-
-            let html = '';
-            fieldMap.forEach(field => {
-                html += `
-                    <div class="border-b pb-1">
-                        <span class="text-sm font-medium text-gray-500">${field.label}:</span>
-                        <p class="text-base text-gray-900 ${field.className || ''}">${field.value}</p>
-                    </div>
-                `;
-            });
-            viewDetailsContainer.innerHTML = html;
-        }
-
-        /**
-         * Opens the modal in View-Only mode when a name is clicked.
-         */
-        window.openViewModal = function(serialNo) {
-            const record = globalRecords.find(r => r.serialNo === serialNo);
-            if (!record) return;
-
-            // 1. Set the Title and Content
-            updateModalTitle.textContent = 'வாக்காளர் முழு விவரம்';
-            setViewModelState(record);
-            
-            // 2. Control Visibility: Show View, Hide Form
-            viewDetailsContainer.classList.remove('hidden');
-            updateForm.classList.add('hidden'); // Hide the editable form
-            
-            // 3. Open the Modal (The close button will still call closeUpdateModal)
-            updateModal.classList.remove('hidden');
-        }
-        
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
             getAuth, signInAnonymously, onAuthStateChanged 
@@ -338,7 +275,6 @@
                 showStatus(`Firebase துவக்கப் பிழை: ${error.message}`, true);
             }
         }
-            
 
         // FIX: The data listener now uses onSnapshot with a Collection Reference
         function setupDataListener() {
@@ -429,12 +365,6 @@
                 return;
             }
 
-            // ⬇️ ADD THESE LINES TO SWITCH TO EDIT MODE ⬇️
-            updateModalTitle.textContent = 'தொடர்பு விவரம் பதிய';
-            viewDetailsContainer.classList.add('hidden');    // Hide the view
-            updateForm.classList.remove('hidden');           // Show the form
-            // ⬆️ END OF ADDED LINES ⬆️
-            
             // Populate modal fields
             updateNameEl.textContent = record.name;
             updateSerialNoEl.value = serialNo;
@@ -465,21 +395,13 @@
             updateModal.classList.remove('hidden');
         }
 
-        window.closeUpdateModal = function() {
+                        window.closeUpdateModal = function() {
             // 1. Hide the modal and reset the form immediately
             updateModal.classList.add('hidden');
             updateForm.reset();
             
             // 2. Aggressively reset the scroll position immediately.
             resetScrollPosition(); 
-
-            // ⬇️ ADD THESE LINES TO RESET MODAL STATE ⬇️
-            viewDetailsContainer.classList.add('hidden'); // Hide the view
-            updateForm.classList.remove('hidden');      // Show the form for next time
-            // ⬆️ END OF ADDED LINES ⬆️
-
-            // Revert title to default
-            updateModalTitle.textContent = 'தொடர்பு விவரம் பதிய'; 
 
             // 3. Set a timeout to reset the scroll position again after the browser 
             // has finished its modal cleanup/scroll restoration attempt (approx 100ms).
@@ -664,4 +586,3 @@
 
 </body>
 </html>
-
