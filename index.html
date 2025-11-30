@@ -7,8 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <style>
-        /* ... existing styles ... */
-        
         /* ⬇️ NEW: Lock scrolling on the main window ⬇️ */
         html, body {
             height: 100%; 
@@ -159,17 +157,17 @@
         <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
-            getAuth, signInAnonymously, onAuthStateChanged 
+            getAuth, signInAnonymously, onAuthStateChanged, signOut // Added signOut 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
-            getFirestore, collection, doc, onSnapshot, updateDoc, getDocs
+            getFirestore, collection, doc, onSnapshot, updateDoc
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         setLogLevel('debug');
 
         // ------------------------------------------------------------------------------------------
-        // Firebase Configuration
+        // Firebase Configuration (USE YOUR ACTUAL CONFIG HERE)
         const firebaseConfig = {
             apiKey: "AIzaSyD5zu1YkYTy5AAGzs8tOVU4Mz5ZLxf87GE", 
             authDomain: "inptvotersdata.firebaseapp.com",
@@ -185,7 +183,6 @@
         let globalRecords = [];
         let currentUserId = null;
         
-        // FIX: Collection Name now points to the root collection where data is actually stored
         const COLLECTION_NAME = 'voterRecords'; 
         
         // ⬇️ SCROLL FIX: Disable browser's automatic scroll restoration ⬇️
@@ -214,8 +211,8 @@
         // ⬇️ DOM ELEMENTS FOR MODAL MODES ⬇️
         const viewDetailsContainer = document.getElementById('view-details-container');
         const updateModalTitle = document.querySelector('#update-modal h2');
-        const modalViewButtons = document.getElementById('modal-view-buttons'); // NEW VIEW BUTTONS CONTAINER
-        const modalFormButtons = document.getElementById('modal-form-buttons'); // Form buttons container
+        const modalViewButtons = document.getElementById('modal-view-buttons'); 
+        const modalFormButtons = document.getElementById('modal-form-buttons'); 
         // ⬆️ END DOM ELEMENTS ⬆️
 
 
@@ -249,7 +246,6 @@
             }
         }
 
-        // FIX: Function now returns a Collection Reference to 'voterRecords'
         function getCollectionRef() {
             return collection(db, COLLECTION_NAME);
         }
@@ -257,7 +253,6 @@
         // --- Firebase Core Initialization and Data Listener ---
 
         async function initFirebase() {
-            // Check if the placeholder config was replaced (no longer checking for 'YOUR_PROJECT_ID' but ensuring the values look real)
             if (!firebaseConfig.apiKey || firebaseConfig.apiKey.length < 30) { 
                 showStatus("⛔ பிழை: Firebase API விசை காணப்படவில்லை அல்லது தவறாக உள்ளது.", true);
                 return;
@@ -269,7 +264,7 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // 1. Authenticate (Anonymous Sign-in)
+                // 1. Authenticate (Anonymous Sign-in) - CRITICAL FIX implemented here
                 await new Promise(resolve => {
                     const unsubscribe = onAuthStateChanged(auth, async (user) => {
                         if (user) {
@@ -279,12 +274,23 @@
                                 await signInAnonymously(auth); 
                                 currentUserId = auth.currentUser.uid;
                             } catch (error) {
-                                console.error("Authentication Error:", error);
-                                showStatus("அங்கீகார பிழை: தரவை அணுக முடியவில்லை.", true);
+                                console.error("Authentication Error: Failed to sign in anonymously.", error);
+                                
+                                // ⬇️ CRITICAL FIX: Explicitly sign out to revoke the session on failure ⬇️
+                                try {
+                                    await signOut(auth); // Use imported signOut function
+                                    console.log("Previous anonymous session revoked successfully.");
+                                } catch (signOutError) {
+                                    console.error("Error revoking session:", signOutError);
+                                }
+                                // ⬆️ END CRITICAL FIX ⬆️
+                                
+                                showStatus("அங்கீகார பிழை: தரவை அணுக முடியவில்லை. Firebase Quota அல்லது தொடர்பு சிக்கல்.", true);
                                 currentUserId = 'anonymous-error';
                             }
                         }
-                        currentUserIdEl.textContent = currentUserId;
+                        // Correctly handle the display text for failed state
+                        currentUserIdEl.textContent = (currentUserId === 'anonymous-error') ? 'இல்லை' : currentUserId;
                         unsubscribe(); 
                         resolve();
                     });
@@ -299,25 +305,22 @@
             }
         }
 
-        // FIX: The data listener now uses onSnapshot with a Collection Reference
         function setupDataListener() {
-            if (!db || !currentUserId) {
+            if (!db || !currentUserId || currentUserId === 'anonymous-error') {
                 console.log("Database or User ID not ready for listener.");
-                return;
+                // Do not attempt to load data if authentication failed
+                return; 
             }
 
             const collectionRef = getCollectionRef();
             
-            // Listen to the entire collection
             onSnapshot(collectionRef, (querySnapshot) => {
                 const records = [];
-                // Iterate through each document in the collection
+                
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     records.push({
-                        // Store the Firestore Document ID, which is needed for updates
                         docId: doc.id, 
-                        // Map fields to expected front-end structure
                         serialNo: Number(data.serialNo) || 0,
                         name: String(data.name || ''),
                         fatherName: String(data.fatherName || ''),
@@ -338,7 +341,6 @@
                     hideStatus();
                 } else {
                     filterRecords();
-                    // Show the specific error for no records found
                     showStatus("வாக்காளர் பதிவுகள் எதுவும் கிடைக்கவில்லை. தரவைப் பதிவேற்றவும்.", true);
                 }
             }, (error) => {
@@ -349,10 +351,6 @@
         
         // --- Modal and Update Logic (Edit Mode) ---
         
-        /**
-         * Sets the state of the modal elements. Locks individual fields if data exists.
-         * @param {Object} record - The current voter record.
-         */
         function setUpdateModalState(record) {
             const mobileExists = record.mobileNo.trim() !== '';
             const addressExists = record.address.trim() !== '';
@@ -380,7 +378,6 @@
         }
         
         window.openUpdateModal = function(serialNo) {
-            // FIX: Find the record by serialNo (which is what the button passes)
             const record = globalRecords.find(r => r.serialNo === serialNo);
             
             if (!record) {
@@ -399,18 +396,16 @@
             // Populate modal fields
             updateNameEl.textContent = record.name;
             updateSerialNoEl.value = serialNo;
-            updateDocIdEl.value = record.docId; // NEW: Store the Doc ID
+            updateDocIdEl.value = record.docId; 
             updateRelationEl.value = record.relation; 
-            updateMobileEl.value = record.mobileNo;
             updateAddressEl.value = record.address;
             
-            // Set the disabled/enabled state based on existing data
             setUpdateModalState(record);
 
-             // ----------------------------------------------------------------------
-            // Masking Logic for Mobile No. (Only applied if the field is readOnly)
+            // ----------------------------------------------------------------------
+            // Masking Logic for Mobile No. (Applied to input value if readOnly)
             let mobileNoValue = record.mobileNo || '';
-            const mobileIsReadOnly = updateMobileEl.readOnly; // Check if setUpdateModalState locked it
+            const mobileIsReadOnly = updateMobileEl.readOnly; 
 
             if (mobileIsReadOnly && mobileNoValue.length >= 4) {
                 // If the field is locked (data exists), display the masked version
@@ -421,23 +416,39 @@
             }
             // ----------------------------------------------------------------------
             
-            // Ensure bottom status is hidden
             hideStatus(modalStatusBottomEl);
             updateModal.classList.remove('hidden');
         }
 
         
-        // ⬇️ NEW: View-Only Modal Functions (View Mode) ⬇️
+        // ⬇️ NEW: View-Only Modal Functions (View Mode) with CORRECT Masking ⬇️
 
-                /**
-         * Renders the record data vertically inside the modal (with unmasked mobile number).
+        /**
+         * Renders the record data vertically inside the modal, with CORRECT masking applied.
          */
         function setViewModelState(record) {
             
-            // Mobile number is displayed unmasked, using raw record data.
-            let displayMobileNo = record.mobileNo || 'பதியவில்லை';
-            let mobileClassName = displayMobileNo === 'பதியவில்லை' ? 'text-red-500' : 'text-green-700 font-semibold';
+            // 1. Prepare Masked Mobile No.
+            let rawMobileNo = record.mobileNo || '';
+            let displayMobileNo = rawMobileNo;
+            let mobileClassName = 'text-gray-900'; 
             
+            if (rawMobileNo.length > 0) {
+                mobileClassName = 'text-green-700 font-semibold';
+                
+                if (rawMobileNo.length >= 4) {
+                    // CORRECTED LINE: Mask all but the last four digits
+                    displayMobileNo = '******' + rawMobileNo.slice(-4);
+                } else {
+                    // If less than 4 digits, show the available digits
+                    displayMobileNo = rawMobileNo; 
+                }
+            } else {
+                displayMobileNo = 'பதியவில்லை';
+                mobileClassName = 'text-red-500';
+            }
+
+
             const fieldMap = [
                 { label: 'வரிசை எண்', value: record.serialNo, className: 'text-base font-bold text-blue-800' },
                 { label: 'பெயர்', value: record.name, className: 'text-lg font-bold text-indigo-800' },
@@ -447,7 +458,7 @@
                 { label: 'திருமணமான வருடம்', value: record.marriageYear },
                 { label: 'திருமணத்தின் போது வயது', value: record.ageAtMarriage },
                 { label: 'தற்போதைய வயது', value: record.currentAge },
-                // Mobile number displayed here is UNMASKED
+                // Use the prepared, masked mobile number and its class
                 { label: 'மொபைல் நம்பர்', value: displayMobileNo, className: mobileClassName },
                 { label: 'முகவரி', value: record.address || 'பதியவில்லை' }
             ];
@@ -464,9 +475,7 @@
             viewDetailsContainer.innerHTML = html;
         }
 
-        /**
-         * Opens the modal in View-Only mode when a Serial Number is clicked.
-         */
+
         window.openViewModal = function(serialNo) {
             const record = globalRecords.find(r => r.serialNo === serialNo);
             if (!record) return;
@@ -518,11 +527,10 @@
             }
         }
 
-        // FIX: Updated logic to update a single document by its ID
         async function saveUpdatedRecord() {
             hideStatus(modalStatusBottomEl);
             
-            const docId = updateDocIdEl.value; // Get the Firestore Document ID
+            const docId = updateDocIdEl.value; 
             
             // Validation (Unchanged)
             if (!updateRelationEl.readOnly && !updateRelationEl.value.trim()) {
@@ -538,7 +546,6 @@
                 return;
             }
 
-            // Get current record from local state (by docId) to check for changes
             const currentRecord = globalRecords.find(r => r.docId === docId);
 
             const updatedData = {
@@ -550,7 +557,6 @@
                 lastUpdatedOn: new Date().toISOString()
             };
             
-            // Simplified change check based on the fields we are updating
             const changesDetected = 
                 currentRecord.relation !== updatedData.relation ||
                 currentRecord.mobileNo !== updatedData.mobileNo ||
@@ -567,12 +573,10 @@
             const docRef = doc(db, COLLECTION_NAME, docId);
 
             try {
-                // Use updateDoc to modify the fields on the specific document
                 await updateDoc(docRef, updatedData);
 
                 showStatus("தொடர்பு விவரங்கள் வெற்றிகரமாகப் புதுப்பிக்கப்பட்டன!", false, modalStatusBottomEl);
                 
-                // Close modal (Firestore listener will automatically update the table)
                 setTimeout(() => {
                     closeUpdateModal();
                 }, 1500);
@@ -583,7 +587,7 @@
             }
         }
 
-        // --- Filtering and Rendering Logic (Unchanged) ---
+        // --- Filtering and Rendering Logic ---
 
         window.filterRecords = function() {
             const searchInput = document.getElementById('search-input').value.trim().toLowerCase();
@@ -592,7 +596,6 @@
 
             if (searchInput) {
                 filteredRecords = globalRecords.filter(record => {
-                    // Check if the record fields are available before calling includes()
                     const nameMatch = record.name && record.name.toLowerCase().includes(searchInput);
                     const dateMatch = record.marriageDate && record.marriageDate.toLowerCase().includes(searchInput);
                     const yearMatch = record.marriageYear && record.marriageYear.toString().includes(searchInput);
@@ -610,7 +613,7 @@
             
             if (records.length === 0) {
                 noResultsEl.classList.remove('hidden');
-                resetScrollPosition(); // ✅ Correctly placed scroll reset
+                resetScrollPosition(); 
                 return;
             }
 
@@ -629,14 +632,14 @@
                 
                 // 2. Prepare Shortened Address
                 let displayAddress = record.address || '';
-                const MAX_ADDRESS_LENGTH = 30; // Set the maximum display length
+                const MAX_ADDRESS_LENGTH = 30; 
                 if (displayAddress.length > MAX_ADDRESS_LENGTH) {
                     displayAddress = displayAddress.substring(0, MAX_ADDRESS_LENGTH) + '...';
                 }
 
                 // Data for each cell (order matches table headers)
                 const dataFields = [
-                    record.serialNo, // Index 0
+                    record.serialNo, // Index 0 (Clickable)
                     record.name,     // Index 1
                     record.fatherName,
                     record.relation,
@@ -651,7 +654,7 @@
                 dataFields.forEach((field, index) => {
                     const cell = row.insertCell();
                     
-                    // ⬇️ UPDATED: Make the 'Serial Number' column clickable (index 0) ⬇️
+                    // ⬇️ Clickable 'Serial Number' column (index 0) ⬇️
                     if (index === 0) { 
                         cell.innerHTML = `<button onclick="openViewModal(${record.serialNo})" class="text-blue-600 hover:text-blue-800 font-semibold underline">${field || ''}</button>`;
                     } else {
@@ -676,7 +679,7 @@
                 `;
             });
             
-            resetScrollPosition(); // ✅ Correctly placed scroll reset after the loop completes
+            resetScrollPosition(); 
 
         }
 
@@ -685,6 +688,3 @@
 
 </body>
 </html>
-
-
-
