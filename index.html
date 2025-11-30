@@ -433,6 +433,24 @@
          * Renders the record data vertically inside the modal.
          */
         function setViewModelState(record) {
+
+             // 1. Prepare Masked Mobile No.
+            let displayMobileNo = record.mobileNo || '';
+            let mobileClassName = 'text-gray-900'; 
+            
+            if (displayMobileNo.length > 0) {
+                mobileClassName = displayMobileNo.length > 0 ? 'text-green-700 font-semibold' : 'text-red-500';
+                if (displayMobileNo.length >= 4) {
+                    // Mask all but the last four digits
+                    displayMobileNo = '******' + displayMobileNo.slice(-4);
+                } else {
+                    // If less than 4 digits, show the available digits
+                    displayMobileNo = displayMobileNo; 
+                }
+            } else {
+                displayMobileNo = 'பதியவில்லை';
+                mobileClassName = 'text-red-500';
+            }
             
             const fieldMap = [
                 { label: 'வரிசை எண்', value: record.serialNo, className: 'text-base font-bold text-blue-800' },
@@ -680,3 +698,4 @@
 
 </body>
 </html>
+
