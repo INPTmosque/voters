@@ -514,6 +514,11 @@
         }
         
         function renderTable(records) {
+            // ⬇️ NEW: Clear the entire data container to force scroll position reset
+            const dataContainer = document.getElementById('data-container');
+            if (dataContainer) {
+                dataContainer.innerHTML = ''; // This forces a full wipe
+            }
             voterDetailsBody.innerHTML = '';
             
             if (records.length === 0) {
@@ -585,6 +590,7 @@
 
 </body>
 </html>
+
 
 
 
