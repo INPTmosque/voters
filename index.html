@@ -178,7 +178,12 @@
         
         // FIX: Collection Name now points to the root collection where data is actually stored
         const COLLECTION_NAME = 'voterRecords'; 
-
+// ⬇️ RE-ADD THIS LINE: Disables automatic scroll restoration ⬇️
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        // ⬆️ END OF ADDED LINE ⬆️
+            
         // DOM elements
         const statusMessageEl = document.getElementById('status-message');
         const voterDetailsBody = document.getElementById('voter-details-body');
@@ -401,7 +406,7 @@
             updateForm.reset();
             
             // 2. Aggressively reset the scroll position immediately.
-            resetScrollPosition(); 
+        
 
             // 3. Set a timeout to reset the scroll position again after the browser 
             // has finished its modal cleanup/scroll restoration attempt (approx 100ms).
@@ -586,6 +591,7 @@
 
 </body>
 </html>
+
 
 
 
