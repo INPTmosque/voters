@@ -7,6 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <style>
+        /* ... existing styles ... */
+        
+        /* ⬇️ NEW: Lock scrolling on the main window */
+        html, body {
+            height: 100%; /* Important: makes body take full viewport height */
+            overflow: hidden; /* Prevents scrolling on the main page */
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f7f9fb;
@@ -577,6 +585,7 @@
 
 </body>
 </html>
+
 
 
 
