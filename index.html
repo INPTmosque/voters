@@ -382,6 +382,8 @@
         window.closeUpdateModal = function() {
             updateModal.classList.add('hidden');
             updateForm.reset();
+             // ⬇️ NEW: Reset the scroll position to the top of the table
+            resetScrollPosition(); 
         }
 
         updateForm.onsubmit = function(event) {
@@ -559,6 +561,7 @@
     </script>
 </body>
 </html>
+
 
 
 
