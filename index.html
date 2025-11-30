@@ -478,11 +478,20 @@
             renderTable(filteredRecords);
         }
 
+        // Add this utility function anywhere in your script outside of renderTable
+        function resetScrollPosition() {
+        const dataContainer = document.getElementById('data-container');
+        if (dataContainer) {
+        dataContainer.scrollTop = 0;
+           }
+        }
         function renderTable(records) {
             voterDetailsBody.innerHTML = '';
             
             if (records.length === 0) {
                 noResultsEl.classList.remove('hidden');
+                noResultsEl.classList.remove('hidden');
+        resetScrollPosition(); // <-- Call reset here
                 return;
             }
 
@@ -531,6 +540,9 @@
                     if (index === 5) cell.classList.add('hidden', 'lg:table-cell'); // Marriage Year
                 });
                 
+                // Ensure scroll is at the top after rendering
+    resetScrollPosition(); // <-- Call reset here
+                
                 // Action Button Cell
                 const actionCell = row.insertCell();
                 actionCell.className = 'px-3 py-.5 whitespace-nowrap text-sm font-medium';
@@ -547,23 +559,6 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
