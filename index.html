@@ -402,31 +402,21 @@
 
                         // --- Replace your current window.closeUpdateModal function with this ---
 
-                window.closeUpdateModal = function() {
-            // 1. Hide the modal and reset the form
+        window.closeUpdateModal = function() {
             updateModal.classList.add('hidden');
             updateForm.reset();
             
-            // Get the scroll container element
-            const dataContainer = document.getElementById('data-container');
-            
-            if (dataContainer) {
-                // 2. Temporarily hide the container to FORCE the scroll position to be lost.
-                dataContainer.style.visibility = 'hidden'; 
-                
-                // 3. Use a slight delay to ensure the browser processes the 'hidden' state,
-                // then reset the scroll, re-render, and restore visibility.
-                setTimeout(() => {
-                    // a. Reset scroll position to top
-                    resetScrollPosition();
+            // Wait briefly, then reset the scroll AND force a re-render.
+            setTimeout(() => {
+                resetScrollPosition();
+                // Calling filterRecords() re-runs the whole table render process,
+                // which ends with a guaranteed scroll reset.
+                filterRecords(); 
+            }, 50); 
+        }
 
-                    // b. Force a re-render/data update (which runs resetScrollPosition again)
-                    filterRecords(); 
-                    
-                    // c. Make the container visible again
-                    dataContainer.style.visibility = 'visible'; 
-                }, 50); // 50ms delay
-            }
+// ----------------------------------------------------------------------
+
         }
 
 
@@ -604,6 +594,7 @@
 
 </body>
 </html>
+
 
 
 
