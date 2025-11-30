@@ -139,7 +139,7 @@
     </div>
 
 
-    <script type="module">
+        <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
             getAuth, signInAnonymously, onAuthStateChanged 
@@ -207,6 +207,15 @@
 
         function hideStatus(element = statusMessageEl) {
             element.classList.add('hidden');
+        }
+        
+        // Utility function to reset table scroll position
+        function resetScrollPosition() {
+            const dataContainer = document.getElementById('data-container');
+            if (dataContainer) {
+                // Set the vertical scroll position to 0 (top)
+                dataContainer.scrollTop = 0;
+            }
         }
 
         // FIX: Function now returns a Collection Reference to 'voterRecords'
@@ -350,7 +359,6 @@
 
             // Populate modal fields
             updateNameEl.textContent = record.name;
-           // updateModalMobileEl.textContent = displayMobileNo; // <-- NEW: Display masked number
             updateSerialNoEl.value = serialNo;
             updateDocIdEl.value = record.docId; // NEW: Store the Doc ID
             updateRelationEl.value = record.relation; 
@@ -382,7 +390,7 @@
         window.closeUpdateModal = function() {
             updateModal.classList.add('hidden');
             updateForm.reset();
-             // ⬇️ NEW: Reset the scroll position to the top of the table
+            // ✅ Correctly placed scroll reset when closing modal
             resetScrollPosition(); 
         }
 
@@ -421,7 +429,9 @@
 
             const updatedData = {
                 relation: updateRelationEl.value.trim(), 
-                mobileNo: updateMobileEl.value.trim(),
+                // IMPORTANT: When saving, read the original unmasked number from currentRecord 
+                // if the field is readOnly, otherwise read the value from the input.
+                mobileNo: updateMobileEl.readOnly ? currentRecord.mobileNo : updateMobileEl.value.trim(),
                 address: updateAddressEl.value.trim(),
                 lastUpdatedOn: new Date().toISOString()
             };
@@ -479,21 +489,13 @@
             
             renderTable(filteredRecords);
         }
-
-        // Add this utility function anywhere in your script outside of renderTable
-        function resetScrollPosition() {
-        const dataContainer = document.getElementById('data-container');
-        if (dataContainer) {
-        dataContainer.scrollTop = 0;
-           }
-        }
+        
         function renderTable(records) {
             voterDetailsBody.innerHTML = '';
             
             if (records.length === 0) {
                 noResultsEl.classList.remove('hidden');
-                noResultsEl.classList.remove('hidden');
-        resetScrollPosition(); // <-- Call reset here
+                resetScrollPosition(); // ✅ Correctly placed scroll reset
                 return;
             }
 
@@ -527,8 +529,6 @@
                     record.marriageYear,
                     record.ageAtMarriage,
                     record.currentAge,
-                    //record.mobileNo,
-                    //record.address
                     displayMobileNo, // <-- USES MASKED VALUE
                     displayAddress   // <-- USES SHORTENED VALUE
                 ];
@@ -542,9 +542,6 @@
                     if (index === 5) cell.classList.add('hidden', 'lg:table-cell'); // Marriage Year
                 });
                 
-                // Ensure scroll is at the top after rendering
-    resetScrollPosition(); // <-- Call reset here
-                
                 // Action Button Cell
                 const actionCell = row.insertCell();
                 actionCell.className = 'px-3 py-.5 whitespace-nowrap text-sm font-medium';
@@ -555,21 +552,13 @@
                     </button>
                 `;
             });
+            
+            resetScrollPosition(); // ✅ Correctly placed scroll reset after the loop completes
+
         }
 
         window.onload = initFirebase;
     </script>
+
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
