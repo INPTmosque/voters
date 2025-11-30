@@ -400,25 +400,23 @@
             updateModal.classList.remove('hidden');
         }
 
-                        window.closeUpdateModal = function() {
-            // 1. Hide the modal and reset the form immediately
+                        // --- Replace your current window.closeUpdateModal function with this ---
+
+        window.closeUpdateModal = function() {
             updateModal.classList.add('hidden');
             updateForm.reset();
             
-            // 2. Aggressively reset the scroll position immediately.
-        
-
-            // 3. Set a timeout to reset the scroll position again after the browser 
-            // has finished its modal cleanup/scroll restoration attempt (approx 100ms).
+            // Wait briefly, then reset the scroll AND force a re-render.
             setTimeout(() => {
                 resetScrollPosition();
-                
-                // Optional: If filterRecords() provides any other benefits (like refreshing data), 
-                // you can call it here after the second scroll reset.
-                // filterRecords(); 
-                
-            }, 100); 
+                // Calling filterRecords() re-runs the whole table render process,
+                // which ends with a guaranteed scroll reset.
+                filterRecords(); 
+            }, 50); 
         }
+
+// ----------------------------------------------------------------------
+
 
         
 
@@ -591,6 +589,7 @@
 
 </body>
 </html>
+
 
 
 
