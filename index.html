@@ -390,9 +390,13 @@
         window.closeUpdateModal = function() {
             updateModal.classList.add('hidden');
             updateForm.reset();
-            // ✅ Correctly placed scroll reset when closing modal
-            resetScrollPosition(); 
+            // ⬇️ CORRECTION: Use setTimeout to ensure the scroll reset happens 
+            // after the modal's hidden state is processed by the browser.
+            setTimeout(() => {
+                resetScrollPosition(); 
+            }, 50); // 50 milliseconds delay
         }
+        
 
         updateForm.onsubmit = function(event) {
             event.preventDefault();
@@ -562,3 +566,4 @@
 
 </body>
 </html>
+
