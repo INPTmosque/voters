@@ -460,7 +460,8 @@
                 { label: 'தற்போதைய வயது', value: record.currentAge },
                 // Use the prepared, masked mobile number and its class
                 { label: 'மொபைல் நம்பர்', value: displayMobileNo, className: mobileClassName },
-                { label: 'முகவரி', value: record.address || 'பதியவில்லை' }
+                { label: 'முகவரி', value: record.address || <span style="color: red;">பதியவில்லை</span>
+ }
             ];
 
             let html = '';
@@ -688,6 +689,7 @@
 
 </body>
 </html>
+
 
 
 
