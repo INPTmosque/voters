@@ -178,12 +178,7 @@
         
         // FIX: Collection Name now points to the root collection where data is actually stored
         const COLLECTION_NAME = 'voterRecords'; 
-// ⬇️ RE-ADD THIS LINE: Disables automatic scroll restoration ⬇️
-        if ('scrollRestoration' in history) {
-            history.scrollRestoration = 'manual';
-        }
-        // ⬆️ END OF ADDED LINE ⬆️
-            
+
         // DOM elements
         const statusMessageEl = document.getElementById('status-message');
         const voterDetailsBody = document.getElementById('voter-details-body');
@@ -400,43 +395,25 @@
             updateModal.classList.remove('hidden');
         }
 
-                        // --- Replace your current window.closeUpdateModal function with this ---
-
-                window.closeUpdateModal = function() {
-            // 1. Hide the modal and reset the form
+                        window.closeUpdateModal = function() {
+            // 1. Hide the modal and reset the form immediately
             updateModal.classList.add('hidden');
             updateForm.reset();
             
-            // Get the scroll container element
-            const dataContainer = document.getElementById('data-container');
-            
-            if (dataContainer) {
-                // 2. Temporarily hide the container to FORCE the scroll position to be lost.
-                dataContainer.style.visibility = 'hidden'; 
+            // 2. Aggressively reset the scroll position immediately.
+            resetScrollPosition(); 
+
+            // 3. Set a timeout to reset the scroll position again after the browser 
+            // has finished its modal cleanup/scroll restoration attempt (approx 100ms).
+            setTimeout(() => {
+                resetScrollPosition();
                 
-                // 3. Use a slight delay to ensure the browser processes the 'hidden' state,
-                // then reset the scroll, re-render, and restore visibility.
-                setTimeout(() => {
-                    // a. Reset scroll position to top
-                    resetScrollPosition();
-
-                    // b. Force a re-render/data update (which runs resetScrollPosition again)
-                    filterRecords(); 
-                    
-                    // c. Make the container visible again
-                    dataContainer.style.visibility = 'visible'; 
-                }, 50); // 50ms delay
-            }
+                // Optional: If filterRecords() provides any other benefits (like refreshing data), 
+                // you can call it here after the second scroll reset.
+                // filterRecords(); 
+                
+            }, 100); 
         }
-
-
-// ----------------------------------------------------------------------
-
-        }
-
-
-// ----------------------------------------------------------------------
-
 
         
 
@@ -609,16 +586,3 @@
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
