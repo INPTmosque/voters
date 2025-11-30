@@ -110,13 +110,7 @@
             <h2 class="text-2xl font-bold text-indigo-700 mb-3 border-b pb-2">தொடர்பு விவரம் பதிய</h2>
             
             <div id="view-details-container" class="space-y-3 p-4 mb-4 bg-gray-50 rounded-lg hidden">
-                <div class="flex justify-end pt-4 border-t border-gray-200">
-                    <button type="button" onclick="closeUpdateModal()" 
-                            class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition duration-300">
-                        மூடு / Close
-                    </button>
                 </div>
-            </div>
             <form id="update-form">
                 <div class="mb-4">
                     <p id="update-name" class="text-lg font-semibold text-gray-900 bg-gray-50 p-2 rounded-lg"></p>
@@ -142,8 +136,8 @@
                 
                 <div id="modal-status-message-bottom" class="text-center p-3 mb-4 text-sm font-medium rounded-lg hidden"></div>
 
-                <div class="flex justify-end space-x-4">
-                    <button type="button" onclick="closeUpdateModal()" class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition duration-300">
+                <div id="modal-form-buttons" class="flex justify-end space-x-4">
+                    <button type="button" id="form-cancel-button" onclick="closeUpdateModal()" class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition duration-300">
                         ரத்துசெய்
                     </button>
                     <button type="submit" id="save-button" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-300 shadow-md">
@@ -151,7 +145,14 @@
                     </button>
                 </div>
             </form>
-        </div>
+            
+            <div id="modal-view-buttons" class="flex justify-end pt-4 border-t border-gray-200 hidden">
+                <button type="button" onclick="closeUpdateModal()" 
+                        class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition duration-300">
+                    மூடு
+                </button>
+            </div>
+            </div>
     </div>
 
 
@@ -210,10 +211,12 @@
         const modalStatusTopEl = document.getElementById('modal-status-message-top');
         const modalStatusBottomEl = document.getElementById('modal-status-message-bottom');
         
-        // ⬇️ NEW DOM ELEMENTS FOR VIEW MODE ⬇️
+        // ⬇️ DOM ELEMENTS FOR MODAL MODES ⬇️
         const viewDetailsContainer = document.getElementById('view-details-container');
         const updateModalTitle = document.querySelector('#update-modal h2');
-        // ⬆️ END NEW DOM ELEMENTS ⬆️
+        const modalViewButtons = document.getElementById('modal-view-buttons'); // NEW VIEW BUTTONS CONTAINER
+        const modalFormButtons = document.getElementById('modal-form-buttons'); // Form buttons container
+        // ⬆️ END DOM ELEMENTS ⬆️
 
 
         // Helper function for styling read-only fields
@@ -344,7 +347,7 @@
             });
         }
         
-        // --- Modal and Update Logic ---
+        // --- Modal and Update Logic (Edit Mode) ---
         
         /**
          * Sets the state of the modal elements. Locks individual fields if data exists.
@@ -385,10 +388,12 @@
                 return;
             }
 
-            // ⬇️ NEW: SWITCH TO EDIT MODE ⬇️
+            // ⬇️ SWITCH TO EDIT MODE ⬇️
             updateModalTitle.textContent = 'தொடர்பு விவரம் பதிய';
             viewDetailsContainer.classList.add('hidden');    // Hide the view
             updateForm.classList.remove('hidden');           // Show the form
+            modalViewButtons.classList.add('hidden');        // Hide view button set
+            modalFormButtons.classList.remove('hidden');     // Show form button set
             // ⬆️ END SWITCH ⬆️
 
             // Populate modal fields
@@ -422,7 +427,7 @@
         }
 
         
-        // ⬇️ NEW: View-Only Modal Functions ⬇️
+        // ⬇️ NEW: View-Only Modal Functions (View Mode) ⬇️
 
         /**
          * Renders the record data vertically inside the modal.
@@ -430,7 +435,7 @@
         function setViewModelState(record) {
             
             const fieldMap = [
-                { label: 'வரிசை எண்', value: record.serialNo },
+                { label: 'வரிசை எண்', value: record.serialNo, className: 'text-base font-bold text-blue-800' },
                 { label: 'பெயர்', value: record.name, className: 'text-lg font-bold text-indigo-800' },
                 { label: 'தந்தை பெயர்', value: record.fatherName },
                 { label: 'வகையரா', value: record.relation || 'பதியவில்லை' },
@@ -455,7 +460,7 @@
         }
 
         /**
-         * Opens the modal in View-Only mode when a name is clicked.
+         * Opens the modal in View-Only mode when a Serial Number is clicked.
          */
         window.openViewModal = function(serialNo) {
             const record = globalRecords.find(r => r.serialNo === serialNo);
@@ -466,9 +471,11 @@
             setViewModelState(record);
             
             // 2. Control Visibility: Show View, Hide Form
-            viewDetailsContainer.classList.remove('hidden');
-            updateForm.classList.add('hidden'); // Hide the editable form
-            
+            viewDetailsContainer.classList.remove('hidden'); // Show the view
+            updateForm.classList.add('hidden');           // Hide the editable form
+            modalViewButtons.classList.remove('hidden');  // Show view button set
+            modalFormButtons.classList.add('hidden');     // Hide form button set
+
             // 3. Open the Modal 
             updateModal.classList.remove('hidden');
         }
@@ -480,9 +487,11 @@
             updateModal.classList.add('hidden');
             updateForm.reset();
             
-            // ⬇️ NEW: RESET MODAL STATE & SCROLL FIX ⬇️
+            // ⬇️ RESET MODAL STATE & SCROLL FIX ⬇️
             viewDetailsContainer.classList.add('hidden'); // Hide the view container
             updateForm.classList.remove('hidden');      // Show the form container for next edit
+            modalViewButtons.classList.add('hidden');   // Hide view button set
+            modalFormButtons.classList.remove('hidden'); // Show form button set
             updateModalTitle.textContent = 'தொடர்பு விவரம் பதிய'; // Revert title
             
             // Scroll Fix: Wait briefly, then reset the scroll AND force a re-render/filter.
@@ -622,8 +631,8 @@
 
                 // Data for each cell (order matches table headers)
                 const dataFields = [
-                    record.serialNo,
-                    record.name, // Index 1
+                    record.serialNo, // Index 0
+                    record.name,     // Index 1
                     record.fatherName,
                     record.relation,
                     record.marriageDate,
@@ -637,13 +646,13 @@
                 dataFields.forEach((field, index) => {
                     const cell = row.insertCell();
                     
-                    // ⬇️ NEW: Make the 'Name' column clickable (index 1 is Name) ⬇️
-                    if (index === 1) { 
+                    // ⬇️ UPDATED: Make the 'Serial Number' column clickable (index 0) ⬇️
+                    if (index === 0) { 
                         cell.innerHTML = `<button onclick="openViewModal(${record.serialNo})" class="text-blue-600 hover:text-blue-800 font-semibold underline">${field || ''}</button>`;
                     } else {
                         cell.textContent = field || '';
                     }
-                    // ⬆️ END NEW CLICKABLE LOGIC ⬆️
+                    // ⬆️ END UPDATED CLICKABLE LOGIC ⬆️
 
                     cell.className = 'px-3 py-.5 whitespace-nowrap text-sm text-gray-700';
                     
@@ -671,5 +680,3 @@
 
 </body>
 </html>
-
-
