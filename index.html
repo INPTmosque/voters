@@ -387,15 +387,20 @@
             updateModal.classList.remove('hidden');
         }
 
-        window.closeUpdateModal = function() {
+                window.closeUpdateModal = function() {
             updateModal.classList.add('hidden');
             updateForm.reset();
-            // ⬇️ CORRECTION: Use setTimeout to ensure the scroll reset happens 
-            // after the modal's hidden state is processed by the browser.
+            
+            // ⬇️ RELIABLE FIX: Re-run filterRecords, which forces renderTable to run,
+            // and renderTable guarantees resetScrollPosition() is called after render.
+            // We use a small delay just to allow the modal to visually close first.
             setTimeout(() => {
-                resetScrollPosition(); 
-            }, 50); // 50 milliseconds delay
+                // This ensures the table is fully redrawn and the resetScrollPosition()
+                // inside renderTable is executed correctly after all elements are in place.
+                filterRecords(); 
+            }, 100); 
         }
+
         
 
         updateForm.onsubmit = function(event) {
@@ -566,4 +571,5 @@
 
 </body>
 </html>
+
 
