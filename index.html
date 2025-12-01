@@ -10,11 +10,15 @@
         /* ⬇️ NEW: Lock scrolling on the main window ⬇️ */
         html, body {
             height: 100%;
+            overflow: hidden; /* CRITICAL: This locks the main window and prevents the header from scrolling away */
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f9fb;
+          font-family: 'Inter', sans-serif;
+          background-color: #f7f9fb;
+          /* Optional: Use flex to ensure the main content div is placed correctly */
+          display: flex; 
+          flex-direction: column;
         }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -22,14 +26,13 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
        
         .data-table-container {
-           /* Setting max-height ensures the outer container wraps nicely, 
-           and scroll happens when content exceeds this size. */
-           max-height: 75vh; 
-           overflow-y: auto; /* Enable vertical scroll only when needed */
-           overflow-x: hidden; /* Explicitly hide horizontal scroll */
+           /* CRITICAL: Use calc() to ensure the container only occupies the remaining space. */
+           /* 280px is an estimated height for the header, search box, and all margins/padding above the table body. */
+           height: calc(100vh - 280px); 
+           overflow-y: auto; /* Enable vertical scroll inside this container */
+           overflow-x: auto; /* Enable horizontal scroll if needed */
            -webkit-overflow-scrolling: touch;
          }
-
 
         /* Style for Modal Overlay */
         .modal-overlay {
@@ -693,6 +696,7 @@
 
 </body>
 </html>
+
 
 
 
