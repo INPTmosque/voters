@@ -9,8 +9,7 @@
     <style>
         /* ⬇️ NEW: Lock scrolling on the main window ⬇️ */
         html, body {
-            height: 100%; 
-            overflow: hidden; 
+            height: 100%;
         }
 
         body {
@@ -21,11 +20,16 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+       
         .data-table-container {
-            max-height: 70vh; 
-            overflow-y: auto; 
-            -webkit-overflow-scrolling: touch;
-        }
+           /* Setting max-height ensures the outer container wraps nicely, 
+           and scroll happens when content exceeds this size. */
+           max-height: 75vh; 
+           overflow-y: auto; /* Enable vertical scroll only when needed */
+           overflow-x: hidden; /* Explicitly hide horizontal scroll */
+           -webkit-overflow-scrolling: touch;
+         }
+
 
         /* Style for Modal Overlay */
         .modal-overlay {
@@ -689,6 +693,7 @@
 
 </body>
 </html>
+
 
 
 
