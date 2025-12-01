@@ -22,13 +22,12 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
        
         .data-table-container {
-           /* Setting max-height ensures the outer container wraps nicely, 
-           and scroll happens when content exceeds this size. */
-           max-height: 75vh; 
-           overflow-y: auto; /* Enable vertical scroll only when needed */
-           overflow-x: hidden; /* Explicitly hide horizontal scroll */
-           -webkit-overflow-scrolling: touch;
-         }
+    max-height: 75vh; 
+    overflow-y: auto; 
+    /* ⬇️ NEW: Allow horizontal scroll ⬇️ */
+    overflow-x: auto; 
+    -webkit-overflow-scrolling: touch;
+}
 
 
         /* Style for Modal Overlay */
@@ -693,6 +692,7 @@
 
 </body>
 </html>
+
 
 
 
