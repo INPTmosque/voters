@@ -22,15 +22,15 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
        
         .data-table-container {
-    max-height: 75vh; 
-    overflow-y: auto; 
-    /* ⬇️ NEW: Allow horizontal scroll ⬇️ */
-    overflow-x: auto; 
-    -webkit-overflow-scrolling: touch;
-}
+            max-height: 75vh; 
+            overflow-y: auto; 
+            /* ⬇️ NEW: Allow horizontal scroll ⬇️ */
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch;
+        }
 
 
-        /* Style for Modal Overlay */
+        /* Style for Modal Overlay (Used for both update and new percentage modal) */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -54,59 +54,130 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
+        
+        /* ------------------------------------------------------------- */
+        /* ⬇️ NEW: STYLES FOR INTRO PERCENTAGE MODAL ⬇️ */
+        /* Note: .modal-overlay and .modal-content are reused/overridden */
+        
+        .intro-modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; 
+            padding: 25px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .percentage-display {
+            padding: 15px;
+            background-color: #e6f7ff;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            border: 1px solid #91d5ff;
+        }
+
+        .percentage-display p {
+            margin: 5px 0;
+            color: #333;
+        }
+
+        .percent-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #0056b3;
+        }
+
+        .modal-button {
+            background-color: #28a745; /* Green color for continue */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s;
+        }
+
+        .modal-button:hover {
+            background-color: #1e7e34;
+        }
+        /* ⬆️ END NEW STYLES ⬆️ */
+        /* ------------------------------------------------------------- */
     </style>
 </head>
 <body class="p-4 sm:p-8">
 
-    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-4 sm:p-8">
-        <header class="mb-6 border-b pb-4">
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-blue-800 text-center">INPT வாக்காளர் பட்டியல்</h1>
-            <p class="text-center text-grey-300 mt-1">விவரங்களைப் பார்க்க, தேட வகையரா/மொபைல் எண்/முகவரியை உள்ளீடு செய்ய</p>
-        </header>
-
-        <div class="mb-6 p-4 bg-blue-50 rounded-lg shadow-inner">
-            <label for="search-input" class="block text-lg font-semibold text-blue-600 mb-2">தேடல் (பெயர், திருமணமான தேதி அல்லது வருடம்)</label>
-            <input type="text" id="search-input" placeholder="பெயர்/தேதி DD-MM-YYYY/ஆண்டு"
-                   class="w-full p-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-540 transition"
-                   oninput="filterRecords()">
-        </div>
-
-        <div id="status-message" class="text-center p-3 mb-4 text-sm font-medium text-gray-600 bg-yellow-100 rounded-lg hidden">
-            தரவு ஏற்றப்படுகிறது...
-        </div>
-
-        <div class="data-table-container" id="data-container">
-            <table class="divide-y divide-gray-200">
-                <thead class="bg-blue-50 sticky top-0 shadow-sm z-10">
-                    <tr>
-                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">வரிசை எண்</th>
-                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">பெயர்</th>
-                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">தந்தை பெயர்</th>
-                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">வகையரா</th>
-                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">திருமணமான தேதி</th>
-                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider hidden lg:table-cell">திருமணமான வருடம்</th>
-                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">திருமணத்தின் போது வயது</th>
-                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">தற்போதைய வயது</th>
-                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">மொபைல் நம்பர்</th>
-                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">முகவரி</th>
-                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">செயல்</th>
-                    </tr>
-                </thead>
-                <tbody id="voter-details-body" class="bg-white divide-y divide-gray-100">
-                    </tbody>
-            </table>
+    <div id="voterInfoModal" class="modal-overlay">
+        <div class="intro-modal-content">
+            <h3>📊 தரவு புதுப்பிப்பு நிலை (Data Update Status)</h3>
             
-            <div id="no-results" class="text-center py-12 text-gray-500 text-xl hidden">
-                தேடலுக்கு ஏற்ற பதிவுகள் எதுவும் இல்லை.
+            <div class="percentage-display">
+                <p>
+                    மொபைல் எண் புதுப்பிக்கப்பட்ட வாக்காளர்களின் சதவீதம்:
+                </p>
+                <p class="percent-value">
+                    <span id="modal-percent">...%</span> </p>
             </div>
-
-            <div id="user-info" class="text-sm text-gray-400 mt-6 pt-4 border-t border-gray-200">
-                <p>பயனர் ID: <span id="current-user-id">இல்லை</span></p>
-                <p class="text-xs text-red-500 mt-1">தரவைப் பதிவேற்ற, உங்கள் கணினியில் உள்ள Node.js ஸ்கிரிப்டைப் பயன்படுத்தவும்.</p>
-            </div>
+            
+            <button id="closeModalBtn" class="modal-button">
+                தொடரவும் (Continue)
+            </button>
         </div>
     </div>
     
+    <div id="mainContent" style="display: none;"> 
+        <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-4 sm:p-8">
+            <header class="mb-6 border-b pb-4">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-blue-800 text-center">INPT வாக்காளர் பட்டியல்</h1>
+                <p class="text-center text-grey-300 mt-1">விவரங்களைப் பார்க்க, தேட வகையரா/மொபைல் எண்/முகவரியை உள்ளீடு செய்ய</p>
+            </header>
+
+            <div class="mb-6 p-4 bg-blue-50 rounded-lg shadow-inner">
+                <label for="search-input" class="block text-lg font-semibold text-blue-600 mb-2">தேடல் (பெயர், திருமணமான தேதி அல்லது வருடம்)</label>
+                <input type="text" id="search-input" placeholder="பெயர்/தேதி DD-MM-YYYY/ஆண்டு"
+                       class="w-full p-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-540 transition"
+                       oninput="filterRecords()">
+            </div>
+
+            <div id="status-message" class="text-center p-3 mb-4 text-sm font-medium text-gray-600 bg-yellow-100 rounded-lg hidden">
+                தரவு ஏற்றப்படுகிறது...
+            </div>
+
+            <div class="data-table-container" id="data-container">
+                <table class="divide-y divide-gray-200">
+                    <thead class="bg-blue-50 sticky top-0 shadow-sm z-10">
+                        <tr>
+                            <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">வரிசை எண்</th>
+                            <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">பெயர்</th>
+                            <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">தந்தை பெயர்</th>
+                            <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">வகையரா</th>
+                            <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">திருமணமான தேதி</th>
+                            <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider hidden lg:table-cell">திருமணமான வருடம்</th>
+                            <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">திருமணத்தின் போது வயது</th>
+                            <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">தற்போதைய வயது</th>
+                            <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">மொபைல் நம்பர்</th>
+                            <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">முகவரி</th>
+                            <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">செயல்</th>
+                        </tr>
+                    </thead>
+                    <tbody id="voter-details-body" class="bg-white divide-y divide-gray-100">
+                        </tbody>
+                </table>
+                
+                <div id="no-results" class="text-center py-12 text-gray-500 text-xl hidden">
+                    தேடலுக்கு ஏற்ற பதிவுகள் எதுவும் இல்லை.
+                </div>
+
+                <div id="user-info" class="text-sm text-gray-400 mt-6 pt-4 border-t border-gray-200">
+                    <p>பயனர் ID: <span id="current-user-id">இல்லை</span></p>
+                    <p class="text-xs text-red-500 mt-1">தரவைப் பதிவேற்ற, உங்கள் கணினியில் உள்ள Node.js ஸ்கிரிப்டைப் பயன்படுத்தவும்.</p>
+                </div>
+            </div>
+        </div>
+    </div>
     <div id="update-modal" class="modal-overlay hidden">
         <div class="modal-content bg-white rounded-xl shadow-3xl p-6 relative">
             <h2 class="text-2xl font-bold text-indigo-700 mb-3 border-b pb-2">தொடர்பு விவரம் பதிய</h2>
@@ -161,7 +232,7 @@
         <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
-            getAuth, signInAnonymously, onAuthStateChanged, signOut // Added signOut 
+            getAuth, signInAnonymously, onAuthStateChanged, signOut 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, collection, doc, onSnapshot, updateDoc
@@ -186,6 +257,8 @@
         let auth;
         let globalRecords = [];
         let currentUserId = null;
+        let totalVoters = 0; // NEW: To store the total count
+        let mobileUpdatedCount = 0; // NEW: To store mobile updated count
         
         const COLLECTION_NAME = 'voterRecords'; 
         
@@ -211,6 +284,13 @@
         const saveButtonEl = document.getElementById('save-button');
         const modalStatusTopEl = document.getElementById('modal-status-message-top');
         const modalStatusBottomEl = document.getElementById('modal-status-message-bottom');
+        
+        // ⬇️ NEW DOM ELEMENTS FOR INTRO MODAL ⬇️
+        const voterInfoModal = document.getElementById('voterInfoModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const mainContent = document.getElementById('mainContent');
+        const modalPercentEl = document.getElementById('modal-percent');
+        // ⬆️ END NEW DOM ELEMENTS ⬆️
         
         // ⬇️ DOM ELEMENTS FOR MODAL MODES ⬇️
         const viewDetailsContainer = document.getElementById('view-details-container');
@@ -254,6 +334,33 @@
             return collection(db, COLLECTION_NAME);
         }
         
+        // ⬇️ NEW: Function to calculate and update percentage ⬇️
+        function updatePercentageDisplay(records) {
+            totalVoters = records.length;
+            mobileUpdatedCount = records.filter(r => r.mobileNo && r.mobileNo.trim() !== '').length;
+            
+            let percentage = 0;
+            if (totalVoters > 0) {
+                percentage = ((mobileUpdatedCount / totalVoters) * 100).toFixed(1);
+            }
+            
+            // Update the percentage in the intro modal
+            modalPercentEl.textContent = `${percentage}%`;
+        }
+
+        // ⬇️ NEW: Function to control intro modal visibility ⬇️
+        function closeModalAndShowMain() {
+            voterInfoModal.style.display = "none";
+            mainContent.style.display = "block";
+        }
+        
+        // Attach listener to the continue button
+        closeModalBtn.addEventListener('click', closeModalAndShowMain);
+        
+        // Initial state: Show modal, Hide main content (CSS handles modal display)
+        mainContent.style.display = "none";
+        // ⬆️ END NEW FUNCTIONS ⬆️
+
         // --- Firebase Core Initialization and Data Listener ---
 
         async function initFirebase() {
@@ -339,6 +446,9 @@
                 });
 
                 globalRecords = records.sort((a, b) => a.serialNo - b.serialNo);
+                
+                // ⬇️ NEW: Update percentage calculation here ⬇️
+                updatePercentageDisplay(globalRecords); 
                 
                 if (globalRecords.length > 0) {
                     filterRecords();
@@ -692,25 +802,3 @@
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
