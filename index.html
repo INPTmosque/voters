@@ -29,10 +29,9 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
         .data-table-container {
-            /* ⬇️ UPDATED: Use calc to reliably fill remaining space ⬇️ */
-            height: calc(100vh - 280px); /* Adjust 280px based on header/search height. Try 250px or 280px */
-            overflow-y: auto; /* Allow vertical scroll */
-            overflow-x: hidden; /* Prevent horizontal scroll for vertical container */ 
+            .data-table-container {
+            max-height: 70vh; 
+            overflow: auto; 
             -webkit-overflow-scrolling: touch;
         }
 
@@ -698,6 +697,7 @@
 
 </body>
 </html>
+
 
 
 
