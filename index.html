@@ -84,7 +84,7 @@
                         <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">தந்தை பெயர்</th>
                         <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">வகையரா</th>
                         <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">திருமணமான தேதி</th>
-                        /* ---<th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider hidden lg:table-cell">திருமணமான வருடம்</th> -- */
+                        <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider hidden lg:table-cell">திருமணமான வருடம்</th>
                         <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">திருமணத்தின் போது வயது</th>
                         <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">தற்போதைய வயது</th>
                         <th class="px-3 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">மொபைல் நம்பர்</th>
@@ -459,7 +459,7 @@
                 { label: 'தந்தை பெயர்', value: record.fatherName },
                 { label: 'வகையரா', value: record.relation || 'பதியவில்லை' },
                 { label: 'திருமணமான தேதி', value: record.marriageDate },
-                { label: 'திருமணமான வருடம்', value: record.marriageYear },
+               /*-- { label: 'திருமணமான வருடம்', value: record.marriageYear },--*/
                 { label: 'திருமணத்தின் போது வயது', value: record.ageAtMarriage },
                 { label: 'தற்போதைய வயது', value: record.currentAge },
                 // Use the prepared, masked mobile number and its class
@@ -692,5 +692,6 @@
 
 </body>
 </html>
+
 
 
