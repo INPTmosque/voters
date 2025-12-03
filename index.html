@@ -1,4 +1,4 @@
-hy<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ta">
 <head>
     <meta charset="UTF-8">
@@ -66,7 +66,7 @@ hy<!DOCTYPE html>
 
         <div class="mb-6 p-4 bg-blue-50 rounded-lg shadow-inner">
             <label for="search-input" class="block text-lg font-semibold text-blue-600 mb-2">தேடல் (பெயர், திருமணமான தேதி அல்லது வருடம்)</label>
-            <input type="text" id="search-input" placeholder="பெயர்/தேதி DD-MM-YYYY/வருடம்"
+            <input type="text" id="search-input" placeholder="பெயர்/தேதி DD-MM-YYYY/ஆண்டு"
                    class="w-full p-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-540 transition"
                    oninput="filterRecords()">
         </div>
@@ -150,7 +150,7 @@ hy<!DOCTYPE html>
             
             <div id="modal-view-buttons" class="flex justify-end pt-4 border-t border-gray-200 hidden">
                 <button type="button" onclick="closeUpdateModal()" 
-                        class="px-4 py-2 bg-yellow-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition duration-300">
+                        class="px-4 py-2 bg-red-300 text-white-800 font-semibold rounded-lg hover:bg-gray-400 transition duration-300">
                     மூடு (CLOSE)
                 </button>
             </div>
@@ -459,7 +459,7 @@ hy<!DOCTYPE html>
                 { label: 'தந்தை பெயர்', value: record.fatherName },
                 { label: 'வகையரா', value: record.relation || 'பதியவில்லை' },
                 { label: 'திருமணமான தேதி', value: record.marriageDate },
-                /*----{ label: 'திருமணமான வருடம்', value: record.marriageYear }, --- */
+                { label: 'திருமணமான வருடம்', value: record.marriageYear },
                 { label: 'திருமணத்தின் போது வயது', value: record.ageAtMarriage },
                 { label: 'தற்போதைய வயது', value: record.currentAge },
                 // Use the prepared, masked mobile number and its class
@@ -692,20 +692,4 @@ hy<!DOCTYPE html>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
